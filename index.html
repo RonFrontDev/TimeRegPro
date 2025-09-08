@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Timeregistrering Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Theme variables for light and dark mode */
+      :root {
+        --color-brand-primary: #4f46e5;
+        --color-brand-secondary: #7c3aed;
+        
+        /* Light Theme (Default) */
+        --color-base-100: #f9fafb; /* main bg */
+        --color-base-200: #ffffff; /* card bg */
+        --color-base-300: #e5e7eb; /* borders, hover */
+        --color-content-100: #111827; /* main text */
+        --color-content-200: #6b7280; /* secondary text */
+        --color-tab-active-text: #ffffff;
+      }
+      html.dark {
+        /* Dark Theme */
+        --color-base-100: #1f2937;
+        --color-base-200: #374151;
+        --color-base-300: #4b5563;
+        --color-content-100: #d1d5db;
+        --color-content-200: #9ca3af;
+      }
+      body {
+        background-color: var(--color-base-100);
+        color: var(--color-content-100);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+    </style>
+    <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-primary': 'var(--color-brand-primary)',
+            'brand-secondary': 'var(--color-brand-secondary)',
+            'base-100': 'var(--color-base-100)',
+            'base-200': 'var(--color-base-200)',
+            'base-300': 'var(--color-base-300)',
+            'content-100': 'var(--color-content-100)',
+            'content-200': 'var(--color-content-200)',
+            'tab-active-text': 'var(--color-tab-active-text)',
+          }
+        }
+      }
+    }
+    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.1.2"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
