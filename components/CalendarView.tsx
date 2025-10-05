@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { type WorkLog, type VideoPost, type CompanyRates, Company } from '../types';
-import { COMPANY_COLORS, VIDEO_POST_COLOR, VIDEO_POST_EARNING } from '../constants';
+import { getCompanyColor, VIDEO_POST_EARNING } from '../constants';
 import DayEntryModal from './DayEntryModal';
 
 type CalendarViewMode = 'month' | 'week' | 'day';
@@ -15,16 +15,17 @@ interface CalendarViewProps {
     onDeleteVideoPost: (date: string) => void;
     currentDate: Date;
     onCurrentDateChange: (date: Date) => void;
+    companyNames: string[];
 }
 
 const VideoIcon: React.FC<{ company: Company }> = ({ company }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute top-1 right-1" viewBox="0 0 20 20" fill={COMPANY_COLORS[company]}>
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute top-1 right-1" viewBox="0 0 20 20" fill={getCompanyColor(company)}>
       <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm14.553 1.106A1 1 0 0016 8v4a1 1 0 00.553.894l2 1A1 1 0 0020 13V7a1 1 0 00-1.447-.894l-2-1z" />
     </svg>
 );
 
 const CalendarView: React.FC<CalendarViewProps> = (props) => {
-    const { logs, videoPosts, companyRates, onAddLog, onDeleteLog, onSaveVideoPost, onDeleteVideoPost, currentDate, onCurrentDateChange } = props;
+    const { logs, videoPosts, companyRates, onAddLog, onDeleteLog, onSaveVideoPost, onDeleteVideoPost, currentDate, onCurrentDateChange, companyNames } = props;
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [view, setView] = useState<CalendarViewMode>('month');
 
@@ -135,14 +136,14 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                         return (
                             <div
                                 key={i}
-                                className={`p-2 h-24 rounded-md flex flex-col justify-start items-start relative transition-colors duration-200 cursor-pointer hover:bg-base-300 ${isCurrentMonth ? 'bg-base-100' : 'bg-base-300/50 text-content-200/50'}`}
+                                className={`p-2 h-28 rounded-md flex flex-col justify-start items-start relative transition-colors duration-200 cursor-pointer hover:bg-base-300 ${isCurrentMonth ? 'bg-base-100' : 'bg-base-300/50 text-content-200/50'}`}
                                 onClick={() => handleDayClick(d)}
                             >
                                 <span className={`font-bold ${isToday ? 'bg-brand-primary text-white rounded-full h-6 w-6 flex items-center justify-center' : ''}`}>{d.getDate()}</span>
                                 {dayVideoPost && <VideoIcon company={dayVideoPost.company} />}
                                 <div className="mt-1 flex flex-wrap gap-1">
                                     {dayLogs.slice(0, 9).map(log => (
-                                        <div key={log.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: COMPANY_COLORS[log.company] }} title={`${log.company}: ${log.hours} timer`}></div>
+                                        <div key={log.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: getCompanyColor(log.company) }} title={`${log.company}: ${log.hours} timer`}></div>
                                     ))}
                                 </div>
                             </div>
@@ -181,14 +182,14 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                             <div className="flex-grow mt-2 space-y-1 overflow-y-auto min-h-[150px]">
                                 {dayLogs.map(log => (
                                     <div key={log.id} className="text-xs bg-base-300 p-1.5 rounded flex items-center" title={`${log.company}: ${log.hours}t @ ${log.rate}kr`}>
-                                        <span className="h-2 w-2 rounded-full mr-2 flex-shrink-0" style={{ backgroundColor: COMPANY_COLORS[log.company] }}></span>
+                                        <span className="h-2 w-2 rounded-full mr-2 flex-shrink-0" style={{ backgroundColor: getCompanyColor(log.company) }}></span>
                                         <span className="truncate flex-grow">{log.company}</span>
                                         <span className="font-semibold ml-2">{(log.hours * log.rate).toFixed(0)}</span>
                                     </div>
                                 ))}
                                 {dayVideoPost && (
                                      <div className="text-xs bg-base-300 p-1.5 rounded flex items-center" title={`Video Post: ${VIDEO_POST_EARNING}kr`}>
-                                        <span className="h-2 w-2 rounded-full mr-2 flex-shrink-0" style={{ backgroundColor: VIDEO_POST_COLOR }}></span>
+                                        <span className="h-2 w-2 rounded-full mr-2 flex-shrink-0" style={{ backgroundColor: getCompanyColor(dayVideoPost.company) }}></span>
                                         <span className="truncate flex-grow">Video Post</span>
                                         <span className="font-semibold ml-2">{VIDEO_POST_EARNING}</span>
                                     </div>
@@ -222,7 +223,7 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                             {dayLogs.map(log => (
                                 <div key={log.id} className="bg-base-300 p-3 rounded-lg flex justify-between items-center gap-4">
                                     <div className="flex items-center min-w-0">
-                                        <span className="h-2 w-2 rounded-full mr-3" style={{ backgroundColor: COMPANY_COLORS[log.company] }}></span>
+                                        <span className="h-2 w-2 rounded-full mr-3" style={{ backgroundColor: getCompanyColor(log.company) }}></span>
                                         <div>
                                             <p className="font-medium text-content-100 truncate">{log.company}</p>
                                             <p className="text-xs text-content-200">{log.hours} timer @ kr. {log.rate.toFixed(2)}/time</p>
@@ -234,7 +235,7 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                             {dayVideoPost && (
                                 <div className="bg-base-300 p-3 rounded-lg flex justify-between items-center gap-4">
                                      <div className="flex items-center">
-                                        <span className="h-2 w-2 rounded-full mr-3" style={{ backgroundColor: VIDEO_POST_COLOR }}></span>
+                                        <span className="h-2 w-2 rounded-full mr-3" style={{ backgroundColor: getCompanyColor(dayVideoPost.company) }}></span>
                                         <div>
                                             <p className="font-medium text-content-100">Video Post</p>
                                             <p className="text-xs text-content-200">{dayVideoPost.company}</p>
@@ -284,6 +285,7 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                     companyRates={companyRates}
                     onAddLog={onAddLog}
                     onDeleteLog={onDeleteLog}
+                    companyNames={companyNames}
                 />
             )}
         </div>

@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import { type WorkLog, Company, CompanyRates } from '../types';
-import { COMPANIES } from '../constants';
 
 interface LogFormProps {
     onAddLog: (log: Omit<WorkLog, 'id'>) => void;
@@ -8,10 +8,22 @@ interface LogFormProps {
 }
 
 const LogForm: React.FC<LogFormProps> = ({ onAddLog, companyRates }) => {
-    const [company, setCompany] = useState<Company>(COMPANIES[0]);
+    // FIX: Derive company names from props instead of a non-existent static constant.
+    const companyNames = Object.keys(companyRates).sort();
+    const [company, setCompany] = useState<Company>(companyNames[0] || '');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [hours, setHours] = useState('');
     const [rate, setRate] = useState('');
+
+    useEffect(() => {
+        // This effect keeps the selected company in sync if the list of companies changes.
+        if (companyNames.length > 0 && !companyNames.includes(company)) {
+            setCompany(companyNames[0]);
+        } else if (companyNames.length === 0) {
+            setCompany('');
+        }
+    }, [companyRates]);
+
 
     useEffect(() => {
         // Auto-fill rate when company changes
@@ -28,7 +40,7 @@ const LogForm: React.FC<LogFormProps> = ({ onAddLog, companyRates }) => {
         const hoursNum = parseFloat(hours);
         const rateNum = parseFloat(rate);
 
-        if (hoursNum > 0 && rateNum >= 0) {
+        if (company && hoursNum > 0 && rateNum >= 0) {
             onAddLog({ company, date, hours: hoursNum, rate: rateNum });
             setHours('');
             // Keep rate pre-filled for next entry
@@ -47,7 +59,8 @@ const LogForm: React.FC<LogFormProps> = ({ onAddLog, companyRates }) => {
                     onChange={(e) => setCompany(e.target.value as Company)}
                     className="mt-1 block w-full bg-base-300 border border-base-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-primary focus:border-brand-primary sm:text-sm text-content-100"
                 >
-                    {COMPANIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {/* FIX: Use dynamic company names for options */}
+                    {companyNames.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
             </div>
             <div>

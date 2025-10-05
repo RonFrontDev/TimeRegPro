@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect, createContext, useContext } from 'react';
 import { type WorkLog, type CompanyRates, type VideoPost, Company } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
@@ -8,6 +9,11 @@ import ExportControls from './components/ExportControls';
 import { exportToCSV } from './utils/csvExporter';
 import Settings from './components/Settings';
 import CalendarView from './components/CalendarView';
+import EarningsChart from './components/EarningsChart';
+import SalaryCalculator from './components/SalaryCalculator';
+import ControlPanel from './components/ControlPanel';
+import { VIDEO_POST_EARNING } from './constants';
+import {addData} from "./firebase";
 
 // THEME CONTEXT
 type Theme = 'light' | 'dark';
@@ -44,9 +50,9 @@ const AppContent: React.FC = () => {
     const [workLogs, setWorkLogs] = useLocalStorage<WorkLog[]>('workLogs', []);
     const [videoPosts, setVideoPosts] = useLocalStorage<VideoPost[]>('videoPosts', []);
     const [companyRates, setCompanyRates] = useLocalStorage<CompanyRates>('companyRates', {
-        [Company.Kraftvrk]: 160,
-        [Company.FormAndFitness]: 225,
-        [Company.ArteSuave]: 300,
+        'Kraftvrk': 160,
+        'Form & Fitness': 225,
+        'Arte Suave': 300,
     });
     const [activeTab, setActiveTab] = useState<'list' | 'calendar'>('calendar');
 
@@ -66,6 +72,37 @@ const AppContent: React.FC = () => {
     const sortedLogs = useMemo(() => {
         return [...workLogs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [workLogs]);
+
+    const companyNames = useMemo(() => Object.keys(companyRates).sort(), [companyRates]);
+    
+    const filteredEarningsByCompany = useMemo(() => {
+        const earnings: { [key: string]: number } = {};
+
+        const logsInPeriod = workLogs.filter(log => {
+            if (startDate && log.date < startDate) return false;
+            if (endDate && log.date > endDate) return false;
+            return true;
+        });
+
+        const videoPostsInPeriod = videoPosts.filter(post => {
+            if (startDate && post.date < startDate) return false;
+            if (endDate && post.date > endDate) return false;
+            return true;
+        });
+
+        for (const log of logsInPeriod) {
+            const currentEarning = earnings[log.company] || 0;
+            earnings[log.company] = currentEarning + (log.hours * log.rate);
+        }
+
+        for (const post of videoPostsInPeriod) {
+            const currentEarning = earnings[post.company] || 0;
+            earnings[post.company] = currentEarning + VIDEO_POST_EARNING;
+        }
+
+        return earnings;
+    }, [workLogs, videoPosts, startDate, endDate]);
+
 
     const handleAddLog = (log: Omit<WorkLog, 'id'>) => {
         const newLog: WorkLog = {
@@ -100,6 +137,7 @@ const AppContent: React.FC = () => {
                     company,
                 };
                 return [...prev, newPost];
+                
             }
         });
     };
@@ -109,6 +147,19 @@ const AppContent: React.FC = () => {
     };
 
     const handleSaveRates = (newRates: CompanyRates) => {
+        const oldCompanies = Object.keys(companyRates);
+        const newCompanies = Object.keys(newRates);
+        const deletedCompanies = oldCompanies.filter(c => !newCompanies.includes(c));
+
+        if (deletedCompanies.length > 0) {
+            const confirmMessage = `Er du sikker på, du vil slette ${deletedCompanies.join(', ')}? Alle tilknyttede arbejds- og videoposter vil også blive slettet permanent. Denne handling kan ikke fortrydes.`;
+            if (!window.confirm(confirmMessage)) {
+                return; // Abort if user cancels
+            }
+            // Filter logs and posts to remove data for deleted companies
+            setWorkLogs(prev => prev.filter(log => !deletedCompanies.includes(log.company)));
+            setVideoPosts(prev => prev.filter(post => !deletedCompanies.includes(post.company)));
+        }
         setCompanyRates(newRates);
     };
 
@@ -125,22 +176,26 @@ const AppContent: React.FC = () => {
         <div className="min-h-screen">
             <Header />
             <main className="container mx-auto p-4 md:p-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column */}
-                    <div className="lg:col-span-1 space-y-8">
-                        <Settings rates={companyRates} onSaveRates={handleSaveRates} />
-                        <ExportControls
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    {/* Left Column - Controls */}
+                    <div className="lg:col-span-2">
+                         <ControlPanel
+                            rates={companyRates}
+                            onSaveRates={handleSaveRates}
                             onExport={handleExport}
                             startDate={startDate}
                             endDate={endDate}
                             onStartDateChange={setStartDate}
                             onEndDateChange={setEndDate}
+                            grossEarningsByCompany={filteredEarningsByCompany}
+                            companyNames={companyNames}
                         />
                     </div>
 
-                    {/* Right Column */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <Summary logs={sortedLogs} videoPosts={videoPosts} />
+                    {/* Right Column - Main Content */}
+                    <div className="lg:col-span-3 space-y-8">
+                        <Summary logs={sortedLogs} videoPosts={videoPosts} companyNames={companyNames} />
+                        <EarningsChart logs={sortedLogs} videoPosts={videoPosts} />
 
                         {/* Tabs for List/Calendar view */}
                         <div className="flex bg-base-300 rounded-lg p-1 space-x-1">
@@ -169,6 +224,7 @@ const AppContent: React.FC = () => {
                                 onDeleteVideoPost={handleDeleteVideoPost}
                                 currentDate={currentDate}
                                 onCurrentDateChange={setCurrentDate}
+                                companyNames={companyNames}
                              />
                         )}
                     </div>
@@ -194,6 +250,7 @@ const App: React.FC = () => {
     return (
         <ThemeContext.Provider value={{ theme, toggleTheme }}>
             <AppContent />
+{/* FIX: Corrected typo in closing tag from Theme-Context to ThemeContext */}
         </ThemeContext.Provider>
     );
 };

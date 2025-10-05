@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
 import { type WorkLog, Company, type VideoPost } from '../types';
-import { COMPANIES, COMPANY_COLORS, VIDEO_POST_EARNING } from '../constants';
+import { getCompanyColor, VIDEO_POST_EARNING } from '../constants';
 
 interface SummaryProps {
     logs: WorkLog[];
     videoPosts: VideoPost[];
+    companyNames: string[];
 }
 
 const StatCard: React.FC<{ title: string; value: string; icon?: React.ReactNode }> = ({ title, value, icon }) => (
@@ -17,11 +18,11 @@ const StatCard: React.FC<{ title: string; value: string; icon?: React.ReactNode 
     </div>
 );
 
-const Summary: React.FC<SummaryProps> = ({ logs, videoPosts }) => {
+const Summary: React.FC<SummaryProps> = ({ logs, videoPosts, companyNames }) => {
     const { totalHours, totalEarnings, earningsByCompany } = useMemo(() => {
         let totalHours = 0;
         let totalEarnings = 0;
-        const earningsByCompany: { [key in Company]?: number } = {};
+        const earningsByCompany: { [key: string]: number } = {};
 
         for (const log of logs) {
             const earnings = log.hours * log.rate;
@@ -41,7 +42,7 @@ const Summary: React.FC<SummaryProps> = ({ logs, videoPosts }) => {
     return (
         <div className="bg-base-200 p-6 rounded-xl shadow-lg">
             <h3 className="text-xl font-bold text-content-100 mb-4">Oversigt</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <StatCard 
                     title="Totale Timer" 
                     value={totalHours.toFixed(2)}
@@ -61,10 +62,10 @@ const Summary: React.FC<SummaryProps> = ({ logs, videoPosts }) => {
                     }
                 />
             </div>
-            <div className="mt-6">
+            <div className="mt-8">
                  <h4 className="text-md font-semibold text-content-100 mb-2">Indtjening per Kilde</h4>
                  <div className="space-y-2">
-                     {COMPANIES.map(company => (
+                     {companyNames.map(company => (
                         <div key={company}>
                             <div className="flex justify-between text-sm mb-1">
                                 <span className="font-medium text-content-200">{company}</span>
@@ -75,7 +76,7 @@ const Summary: React.FC<SummaryProps> = ({ logs, videoPosts }) => {
                                     className="h-2.5 rounded-full" 
                                     style={{ 
                                         width: `${totalEarnings > 0 ? ((earningsByCompany[company] || 0) / totalEarnings) * 100 : 0}%`,
-                                        backgroundColor: COMPANY_COLORS[company]
+                                        backgroundColor: getCompanyColor(company)
                                     }}
                                 ></div>
                             </div>

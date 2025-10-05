@@ -1,6 +1,6 @@
 import React from 'react';
 import { type WorkLog } from '../types';
-import { COMPANY_COLORS } from '../constants';
+import { getCompanyColor } from '../constants';
 
 interface LogListProps {
     logs: WorkLog[];
@@ -39,7 +39,7 @@ const LogList: React.FC<LogListProps> = ({ logs, onDeleteLog }) => {
                             <tr key={log.id} className="bg-base-200 border-b border-base-300 hover:bg-base-300/50">
                                 <td className="px-6 py-4 font-medium text-content-100 whitespace-nowrap">
                                     <span className="flex items-center">
-                                      <span className="h-2 w-2 rounded-full mr-2" style={{ backgroundColor: COMPANY_COLORS[log.company] }}></span>
+                                      <span className="h-2 w-2 rounded-full mr-2" style={{ backgroundColor: getCompanyColor(log.company) }}></span>
                                       {log.company}
                                     </span>
                                 </td>

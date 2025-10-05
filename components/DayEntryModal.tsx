@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { type WorkLog, type VideoPost, type CompanyRates, Company } from '../types';
-import { COMPANIES, COMPANY_COLORS, VIDEO_POST_COLOR, VIDEO_POST_EARNING } from '../constants';
+import { getCompanyColor, VIDEO_POST_EARNING } from '../constants';
 
 interface DayEntryModalProps {
     isOpen: boolean;
@@ -13,6 +13,7 @@ interface DayEntryModalProps {
     onDeleteLog: (id: string) => void;
     onSaveVideoPost: (date: string, company: Company) => void;
     onDeleteVideoPost: (date: string) => void;
+    companyNames: string[];
 }
 
 // Helper function to format date correctly, avoiding timezone issues.
@@ -36,14 +37,15 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({
     onDeleteLog,
     onSaveVideoPost,
     onDeleteVideoPost,
+    companyNames
 }) => {
     // State for new work log form
-    const [company, setCompany] = useState<Company>(COMPANIES[0]);
+    const [company, setCompany] = useState<Company>(companyNames[0] || '');
     const [hours, setHours] = useState('');
     const [rate, setRate] = useState('');
 
     // State for video post form
-    const [videoCompany, setVideoCompany] = useState<Company>(videoPost?.company || COMPANIES[0]);
+    const [videoCompany, setVideoCompany] = useState<Company>(videoPost?.company || companyNames[0] || '');
 
     // Use the reliable helper function to prevent timezone errors
     const dateString = formatDateToYYYYMMDD(date);
@@ -61,13 +63,15 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({
     useEffect(() => {
         if (videoPost) {
             setVideoCompany(videoPost.company);
-        } else {
-            setVideoCompany(COMPANIES[0]);
+        } else if (companyNames.length > 0) {
+            setVideoCompany(companyNames[0]);
         }
         // Reset form when modal opens for a new day
-        setCompany(COMPANIES[0]);
+        if (companyNames.length > 0) {
+            setCompany(companyNames[0]);
+        }
         setHours('');
-    }, [videoPost, date]);
+    }, [videoPost, date, companyNames]);
 
 
     if (!isOpen) return null;
@@ -139,7 +143,7 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({
                             {logs.map(log => (
                                 <div key={log.id} className="bg-base-300 p-3 rounded-lg flex justify-between items-center gap-4">
                                     <div className="flex items-center flex-grow min-w-0">
-                                        <span className="h-2 w-2 rounded-full mr-3 flex-shrink-0" style={{ backgroundColor: COMPANY_COLORS[log.company] }}></span>
+                                        <span className="h-2 w-2 rounded-full mr-3 flex-shrink-0" style={{ backgroundColor: getCompanyColor(log.company) }}></span>
                                         <div className="min-w-0">
                                             <p className="font-medium text-content-100 truncate">{log.company}</p>
                                             <p className="text-xs text-content-200">{log.hours} timer @ kr. {log.rate.toFixed(2)}/time</p>
@@ -158,7 +162,7 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({
                             {videoPost && (
                                 <div className="bg-base-300 p-3 rounded-lg flex justify-between items-center gap-4">
                                     <div className="flex items-center flex-grow">
-                                        <span className="h-2 w-2 rounded-full mr-3 flex-shrink-0" style={{ backgroundColor: VIDEO_POST_COLOR }}></span>
+                                        <span className="h-2 w-2 rounded-full mr-3 flex-shrink-0" style={{ backgroundColor: getCompanyColor(videoPost.company) }}></span>
                                         <div>
                                             <p className="font-medium text-content-100">Video Post</p>
                                             <p className="text-xs text-content-200">{videoPost.company}</p>
@@ -180,7 +184,7 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({
                                 <div>
                                     <label htmlFor="modal-company" className="text-sm font-medium text-content-200 block mb-1">Firma</label>
                                     <select id="modal-company" value={company} onChange={e => setCompany(e.target.value as Company)} className="w-full bg-base-300 border-transparent rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary">
-                                        {COMPANIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                        {companyNames.map(c => <option key={c} value={c}>{c}</option>)}
                                     </select>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -200,7 +204,7 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({
                         </div>
                         <div className="bg-base-100 p-4 rounded-lg">
                              <h3 className="text-lg font-semibold text-content-100 mb-3 flex items-center">
-                                <span className="h-2 w-2 rounded-full mr-2" style={{ backgroundColor: VIDEO_POST_COLOR }}></span>
+                                <span className="h-2 w-2 rounded-full mr-2" style={{ backgroundColor: getCompanyColor(videoCompany) }}></span>
                                 Video Post
                             </h3>
                              <div className="space-y-3">
@@ -225,7 +229,7 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({
                                             onChange={(e) => handleVideoCompanyChange(e.target.value as Company)}
                                             className="w-full bg-base-300 border-transparent rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
                                         >
-                                            {COMPANIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                            {companyNames.map(c => <option key={c} value={c}>{c}</option>)}
                                         </select>
                                     </div>
                                 )}

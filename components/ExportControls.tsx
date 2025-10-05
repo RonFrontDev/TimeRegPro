@@ -11,7 +11,7 @@ interface ExportControlsProps {
 
 const ExportControls: React.FC<ExportControlsProps> = ({ onExport, startDate, endDate, onStartDateChange, onEndDateChange }) => {
     return (
-        <div className="bg-base-200 p-6 rounded-xl shadow-lg space-y-4">
+        <div className="space-y-4">
             <h3 className="text-xl font-bold text-content-100">Eksporter Data</h3>
             <p className="text-sm text-content-200">
                 Vælg et datointerval for at filtrere dine data, før du eksporterer. Hvis intet interval vælges, eksporteres alle data.

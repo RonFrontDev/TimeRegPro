@@ -1,10 +1,6 @@
 // Define shared TypeScript types for the application.
 
-export enum Company {
-    Kraftvrk = 'Kraftvrk',
-    FormAndFitness = 'Form & Fitness',
-    ArteSuave = 'Arte Suave',
-}
+export type Company = string;
 
 export interface WorkLog {
     id: string;
@@ -21,5 +17,5 @@ export interface VideoPost {
 }
 
 export type CompanyRates = {
-    [key in Company]?: number;
+    [companyName: string]: number;
 };
