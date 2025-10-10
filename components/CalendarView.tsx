@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { type WorkLog, type VideoPost, type CompanyRates, Company } from '../types';
 import { getCompanyColor, VIDEO_POST_EARNING } from '../constants';
 import DayEntryModal from './DayEntryModal';
@@ -18,6 +18,13 @@ interface CalendarViewProps {
     companyNames: string[];
 }
 
+const formatDateToYYYYMMDD = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const VideoIcon: React.FC<{ company: Company }> = ({ company }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute top-1 right-1" viewBox="0 0 20 20" fill={getCompanyColor(company)}>
       <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm14.553 1.106A1 1 0 0016 8v4a1 1 0 00.553.894l2 1A1 1 0 0020 13V7a1 1 0 00-1.447-.894l-2-1z" />
@@ -29,7 +36,21 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [view, setView] = useState<CalendarViewMode>('month');
 
-    // Helper to get a date string that is timezone-safe for keying
+    // State for Quick Add feature
+    const [isQuickAddActive, setIsQuickAddActive] = useState(false);
+    const [quickAddCompany, setQuickAddCompany] = useState<Company>(companyNames[0] || '');
+    const [quickAddHours, setQuickAddHours] = useState('8');
+
+    useEffect(() => {
+        // Ensure quick add company is valid if company list changes
+        if (companyNames.length > 0 && !companyNames.includes(quickAddCompany)) {
+            setQuickAddCompany(companyNames[0]);
+        } else if (companyNames.length === 0) {
+            setQuickAddCompany('');
+        }
+    }, [companyNames, quickAddCompany]);
+
+
     const toLocalDateString = (date: Date) => {
         return new Date(date.getFullYear(), date.getMonth(), date.getDate()).toDateString();
     }
@@ -54,7 +75,26 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
         return { logsByDate: logsMap, videoPostsByDate: videoMap };
     }, [logs, videoPosts]);
 
-    const handleDayClick = (date: Date) => setSelectedDate(date);
+    const handleDayClick = (date: Date) => {
+        if (isQuickAddActive) {
+            const hoursNum = parseFloat(quickAddHours);
+            if (!quickAddCompany || !hoursNum || hoursNum <= 0) {
+                alert('Vælg venligst et firma og indtast et gyldigt antal timer.');
+                return;
+            }
+            const rate = companyRates[quickAddCompany] || 0;
+            const dateString = formatDateToYYYYMMDD(date);
+            onAddLog({
+                company: quickAddCompany,
+                date: dateString,
+                hours: hoursNum,
+                rate: rate,
+            });
+            // Don't open the modal, just add the log.
+        } else {
+            setSelectedDate(date);
+        }
+    };
     const closeModal = () => setSelectedDate(null);
 
     const navigateDate = (offset: number) => {
@@ -75,7 +115,6 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
         }
         if (view === 'week') {
             const start = new Date(currentDate);
-            // Adjust to Monday
             const dayOfWeek = start.getDay();
             const diff = start.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
             start.setDate(diff);
@@ -90,6 +129,56 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
         }
         return currentDate.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     };
+
+    const QuickAddPanel = () => (
+        <div className={`bg-base-100 p-3 rounded-lg mb-4 border ${isQuickAddActive ? 'border-brand-primary' : 'border-transparent'}`}>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="flex-grow w-full sm:w-auto">
+                    <label htmlFor="qa-company" className="sr-only">Firma</label>
+                    <select
+                        id="qa-company"
+                        value={quickAddCompany}
+                        onChange={e => setQuickAddCompany(e.target.value)}
+                        className="w-full bg-base-300 border-transparent rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                        disabled={isQuickAddActive}
+                    >
+                        {companyNames.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                </div>
+                <div className="flex-grow w-full sm:w-auto">
+                    <label htmlFor="qa-hours" className="sr-only">Timer</label>
+                    <input
+                        id="qa-hours"
+                        type="number"
+                        value={quickAddHours}
+                        onChange={e => setQuickAddHours(e.target.value)}
+                        placeholder="Timer"
+                        step="0.1"
+                        min="0"
+                        className="w-full bg-base-300 border-transparent rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                        disabled={isQuickAddActive}
+                    />
+                </div>
+                <button
+                    onClick={() => setIsQuickAddActive(!isQuickAddActive)}
+                    className={`w-full sm:w-auto px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center justify-center ${isQuickAddActive ? 'bg-brand-primary text-white' : 'bg-base-300 hover:bg-base-300/80'}`}
+                >
+                     {isQuickAddActive ? (
+                         <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            Deaktiver
+                         </>
+                     ) : (
+                         <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                            Aktiver Hurtig Tilføjning
+                         </>
+                     )}
+                </button>
+            </div>
+            {isQuickAddActive && <p className="text-xs text-center mt-2 text-content-200">Klik på en dato i kalenderen for at tilføje en post med de valgte indstillinger.</p>}
+        </div>
+    );
 
     const ViewSwitcher: React.FC = () => (
         <div className="flex justify-center bg-base-300 rounded-lg p-1 space-x-1 mb-4">
@@ -136,7 +225,7 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                         return (
                             <div
                                 key={i}
-                                className={`p-2 h-28 rounded-md flex flex-col justify-start items-start relative transition-colors duration-200 cursor-pointer hover:bg-base-300 ${isCurrentMonth ? 'bg-base-100' : 'bg-base-300/50 text-content-200/50'}`}
+                                className={`p-2 h-28 rounded-md flex flex-col justify-start items-start relative transition-all duration-150 ${isCurrentMonth ? 'bg-base-100' : 'bg-base-300/50 text-content-200/50'} ${isQuickAddActive ? 'cursor-copy hover:bg-brand-primary/20 hover:ring-2 hover:ring-brand-primary' : 'cursor-pointer hover:bg-base-300'}`}
                                 onClick={() => handleDayClick(d)}
                             >
                                 <span className={`font-bold ${isToday ? 'bg-brand-primary text-white rounded-full h-6 w-6 flex items-center justify-center' : ''}`}>{d.getDate()}</span>
@@ -177,7 +266,7 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
                     const totalEarnings = dayLogs.reduce((sum, log) => sum + log.hours * log.rate, 0) + (dayVideoPost ? VIDEO_POST_EARNING : 0);
 
                     return (
-                        <div key={i} className="bg-base-100 rounded-lg p-3 flex flex-col" onClick={() => handleDayClick(d)}>
+                        <div key={i} className="bg-base-100 rounded-lg p-3 flex flex-col cursor-pointer hover:bg-base-300/50" onClick={() => handleDayClick(d)}>
                             <div className="font-bold text-content-100">{daysOfWeek[i]}, {d.getDate()}.</div>
                             <div className="flex-grow mt-2 space-y-1 overflow-y-auto min-h-[150px]">
                                 {dayLogs.map(log => (
@@ -268,6 +357,8 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
             </div>
             
             <ViewSwitcher />
+
+            {view === 'month' && <QuickAddPanel />}
 
             {view === 'month' && renderMonthView()}
             {view === 'week' && renderWeekView()}
