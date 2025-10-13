@@ -39,7 +39,7 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
     // State for Quick Add feature
     const [isQuickAddActive, setIsQuickAddActive] = useState(false);
     const [quickAddCompany, setQuickAddCompany] = useState<Company>(companyNames[0] || '');
-    const [quickAddHours, setQuickAddHours] = useState('8');
+    const [quickAddHours, setQuickAddHours] = useState('1');
 
     useEffect(() => {
         // Ensure quick add company is valid if company list changes
