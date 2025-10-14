@@ -18,6 +18,22 @@ interface CalendarViewProps {
     companyNames: string[];
 }
 
+// Helper function for ISO 8601 week number
+const getWeekNumber = (d: Date): number => {
+    // Create a copy to avoid modifying the original date
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    // Set to nearest Thursday: current date + 4 - current day number
+    // Sunday is 0, Monday is 1, etc. We use || 7 to map Sunday to 7
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    // Get first day of year
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    // Calculate full weeks to nearest Thursday
+    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    // Return week number
+    return weekNo;
+};
+
+
 const formatDateToYYYYMMDD = (d: Date): string => {
     const year = d.getFullYear();
     const month = (d.getMonth() + 1).toString().padStart(2, '0');
@@ -197,7 +213,7 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
     const renderMonthView = () => {
         const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const firstDayOfMonth = startOfMonth.getDay();
-        const dayOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+        const dayOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // Monday is 1, Sunday is 0. We want Monday as 0.
         const startDate = new Date(startOfMonth);
         startDate.setDate(startDate.getDate() - dayOffset);
 
@@ -207,39 +223,51 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
             return day;
         });
 
+        const weeks: Date[][] = [];
+        for (let i = 0; i < days.length; i += 7) {
+            weeks.push(days.slice(i, i + 7));
+        }
+
         const daysOfWeek = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
 
         return (
-            <>
-                <div className="grid grid-cols-7 gap-1 text-center text-xs text-content-200">
-                    {daysOfWeek.map(d => <div key={d} className="p-2 font-semibold">{d}</div>)}
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                    {days.map((d, i) => {
-                        const dateKey = toLocalDateString(d);
-                        const dayLogs = logsByDate.get(dateKey) || [];
-                        const dayVideoPost = videoPostsByDate.get(dateKey);
-                        const isCurrentMonth = d.getMonth() === currentDate.getMonth();
-                        const isToday = dateKey === toLocalDateString(new Date());
+            <div className="grid grid-cols-[2rem_repeat(7,minmax(0,1fr))] gap-1">
+                {/* Header row: Week number placeholder + days of week */}
+                <div className="text-center text-xs p-2 font-semibold text-content-200">#</div>
+                {daysOfWeek.map(d => <div key={d} className="text-center text-xs p-2 font-semibold text-content-200">{d}</div>)}
 
-                        return (
-                            <div
-                                key={i}
-                                className={`p-2 h-28 rounded-md flex flex-col justify-start items-start relative transition-all duration-150 ${isCurrentMonth ? 'bg-base-100' : 'bg-base-300/50 text-content-200/50'} ${isQuickAddActive ? 'cursor-copy hover:bg-brand-primary/20 hover:ring-2 hover:ring-brand-primary' : 'cursor-pointer hover:bg-base-300'}`}
-                                onClick={() => handleDayClick(d)}
-                            >
-                                <span className={`font-bold ${isToday ? 'bg-brand-primary text-white rounded-full h-6 w-6 flex items-center justify-center' : ''}`}>{d.getDate()}</span>
-                                {dayVideoPost && <VideoIcon company={dayVideoPost.company} />}
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                    {dayLogs.slice(0, 9).map(log => (
-                                        <div key={log.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: getCompanyColor(log.company) }} title={`${log.company}: ${log.hours} timer`}></div>
-                                    ))}
+                {/* Calendar body cells */}
+                {weeks.map((week, weekIndex) => (
+                    <React.Fragment key={weekIndex}>
+                        <div className="flex items-center justify-center text-xs font-medium text-content-200/80 pt-2">
+                            {getWeekNumber(week[3])} {/* Use Thursday for ISO week number */}
+                        </div>
+                        {week.map((d) => {
+                            const dateKey = toLocalDateString(d);
+                            const dayLogs = logsByDate.get(dateKey) || [];
+                            const dayVideoPost = videoPostsByDate.get(dateKey);
+                            const isCurrentMonth = d.getMonth() === currentDate.getMonth();
+                            const isToday = dateKey === toLocalDateString(new Date());
+
+                            return (
+                                <div
+                                    key={d.toISOString()}
+                                    className={`p-2 h-28 rounded-md flex flex-col justify-start items-start relative transition-all duration-150 ${isCurrentMonth ? 'bg-base-100' : 'bg-base-300/50 text-content-200/50'} ${isQuickAddActive ? 'cursor-copy hover:bg-brand-primary/20 hover:ring-2 hover:ring-brand-primary' : 'cursor-pointer hover:bg-base-300'}`}
+                                    onClick={() => handleDayClick(d)}
+                                >
+                                    <span className={`font-bold ${isToday ? 'bg-brand-primary text-white rounded-full h-6 w-6 flex items-center justify-center' : ''}`}>{d.getDate()}</span>
+                                    {dayVideoPost && <VideoIcon company={dayVideoPost.company} />}
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        {dayLogs.slice(0, 9).map(log => (
+                                            <div key={log.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: getCompanyColor(log.company) }} title={`${log.company}: ${log.hours} timer`}></div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </>
+                            );
+                        })}
+                    </React.Fragment>
+                ))}
+            </div>
         );
     };
 
