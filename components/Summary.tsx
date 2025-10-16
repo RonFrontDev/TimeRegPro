@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { type WorkLog, Company, type VideoPost } from '../types';
 import { getCompanyColor, VIDEO_POST_EARNING } from '../constants';
@@ -40,8 +41,7 @@ const Summary: React.FC<SummaryProps> = ({ logs, videoPosts, companyNames }) => 
     }, [logs, videoPosts]);
 
     return (
-        <div className="bg-base-200 p-6 rounded-xl shadow-lg">
-            <h3 className="text-xl font-bold text-content-100 mb-4">Oversigt</h3>
+        <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <StatCard 
                     title="Totale Timer" 

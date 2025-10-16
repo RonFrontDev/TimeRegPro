@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Company, CompanyRates } from '../types';
+import CollapsibleSubSection from './CollapsibleSubSection';
 
 interface SettingsProps {
     rates: CompanyRates;
@@ -56,8 +58,7 @@ const Settings: React.FC<SettingsProps> = ({ rates, onSaveRates }) => {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-                <h3 className="text-xl font-bold text-content-100 mb-4">Firma Timelønninger (kr.)</h3>
+            <CollapsibleSubSection title="Firma Timelønninger (kr.)">
                 <div className="space-y-3">
                     {Object.keys(localRates).sort().map(company => (
                         <div key={company} className="flex items-center gap-2">
@@ -88,10 +89,9 @@ const Settings: React.FC<SettingsProps> = ({ rates, onSaveRates }) => {
                         </div>
                     ))}
                 </div>
-            </div>
+            </CollapsibleSubSection>
 
-            <div className="pt-4 border-t border-base-300">
-                <h4 className="text-lg font-semibold text-content-100 mb-3">Tilføj Nyt Firma</h4>
+            <CollapsibleSubSection title="Tilføj Nyt Firma" defaultOpen={false}>
                  <div className="space-y-3">
                     <div>
                         <label htmlFor="new-company-name" className="block text-sm font-medium text-content-200">Nyt Firmanavn</label>
@@ -121,7 +121,7 @@ const Settings: React.FC<SettingsProps> = ({ rates, onSaveRates }) => {
                         Tilføj Firma til Liste
                     </button>
                  </div>
-            </div>
+            </CollapsibleSubSection>
 
             <button type="submit" className="w-full bg-brand-primary hover:bg-brand-secondary text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105">
                 Gem Alle Timelønninger

@@ -1,6 +1,8 @@
+
 import React, { useMemo, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Company, CompanyRates } from '../types';
+import CollapsibleSubSection from './CollapsibleSubSection';
 
 interface SalaryCalculatorProps {
     grossEarningsByCompany: { [key: string]: number };
@@ -109,70 +111,74 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ grossEarningsByComp
                 <p className="text-xs text-content-200 mt-1">Beregner nettoindkomst for det valgte datointerval med individuelle firma-indstillinger.</p>
             </div>
 
-            {/* General Settings */}
-            <div className="space-y-4 p-4 bg-base-100 rounded-lg">
-                <div>
-                    <label htmlFor="deduction" className={labelClasses}>Månedligt Fradrag (kr.)</label>
-                    <input type="number" id="deduction" value={deduction} onChange={(e) => setDeduction(e.target.value)} className={`mt-1 ${inputClasses}`} placeholder="f.eks. 0" />
-                </div>
-                <div>
-                    <label className={labelClasses}>Hovedkort (anvend fradrag)</label>
-                    <div className="mt-2 flex flex-col sm:flex-row gap-2 sm:gap-4">
-                        {companyNames.map(company => (
-                            <label key={company} className="flex items-center space-x-2 text-sm">
-                                <input
-                                    type="radio"
-                                    name="primary-company"
-                                    value={company}
-                                    checked={primaryCompany === company}
-                                    onChange={() => setPrimaryCompany(company)}
-                                    className="h-4 w-4 text-brand-primary focus:ring-brand-primary border-base-300"
-                                />
-                                <span>{company}</span>
-                            </label>
-                        ))}
+            <CollapsibleSubSection title="Generelle Indstillinger">
+                <div className="space-y-4">
+                    <div>
+                        <label htmlFor="deduction" className={labelClasses}>Månedligt Fradrag (kr.)</label>
+                        <input type="number" id="deduction" value={deduction} onChange={(e) => setDeduction(e.target.value)} className={`mt-1 ${inputClasses}`} placeholder="f.eks. 0" />
                     </div>
-                </div>
-            </div>
-
-            {/* Per-Company Settings */}
-            <div className="space-y-4">
-                 {companyNames.map(company => (
-                    <div key={company} className="p-4 border border-base-300 rounded-lg">
-                        <h4 className="font-semibold text-content-100 mb-2">{company}</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <label htmlFor={`am-bidrag-${company}`} className={labelClasses}>AM-bidrag (%)</label>
-                                <input type="number" id={`am-bidrag-${company}`} value={companySettings[company]?.amBidragPercent || ''} onChange={(e) => handleSettingChange(company, 'amBidragPercent', e.target.value)} className={`mt-1 ${inputClasses}`} placeholder="8" />
-                            </div>
-                            <div>
-                                <label htmlFor={`a-tax-${company}`} className={labelClasses}>A-skat (%)</label>
-                                <input type="number" id={`a-tax-${company}`} value={companySettings[company]?.aTaxPercent || ''} onChange={(e) => handleSettingChange(company, 'aTaxPercent', e.target.value)} className={`mt-1 ${inputClasses}`} placeholder="37" />
-                            </div>
+                    <div>
+                        <label className={labelClasses}>Hovedkort (anvend fradrag)</label>
+                        <div className="mt-2 flex flex-col sm:flex-row gap-2 sm:gap-4">
+                            {companyNames.map(company => (
+                                <label key={company} className="flex items-center space-x-2 text-sm">
+                                    <input
+                                        type="radio"
+                                        name="primary-company"
+                                        value={company}
+                                        checked={primaryCompany === company}
+                                        onChange={() => setPrimaryCompany(company)}
+                                        className="h-4 w-4 text-brand-primary focus:ring-brand-primary border-base-300"
+                                    />
+                                    <span>{company}</span>
+                                </label>
+                            ))}
                         </div>
                     </div>
-                 ))}
-            </div>
+                </div>
+            </CollapsibleSubSection>
 
-            {/* Calculation */}
-            <div className="space-y-2 pt-4 border-t border-base-300">
-                <div className="flex justify-between items-center text-sm">
-                    <span className="text-content-200">Bruttoindkomst (valgt periode)</span>
-                    <span className="font-semibold text-content-100">kr. {totalGross.toFixed(2)}</span>
+            <CollapsibleSubSection title="Firma Specifikke Indstillinger">
+                <div className="space-y-4">
+                     {companyNames.map(company => (
+                        <div key={company} className="p-4 border border-base-300 rounded-lg bg-base-100">
+                            <h4 className="font-semibold text-content-100 mb-2">{company}</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                 <div>
+                                    <label htmlFor={`am-bidrag-${company}`} className={labelClasses}>AM-bidrag (%)</label>
+                                    <input type="number" id={`am-bidrag-${company}`} value={companySettings[company]?.amBidragPercent || ''} onChange={(e) => handleSettingChange(company, 'amBidragPercent', e.target.value)} className={`mt-1 ${inputClasses}`} placeholder="8" />
+                                </div>
+                                <div>
+                                    <label htmlFor={`a-tax-${company}`} className={labelClasses}>A-skat (%)</label>
+                                    <input type="number" id={`a-tax-${company}`} value={companySettings[company]?.aTaxPercent || ''} onChange={(e) => handleSettingChange(company, 'aTaxPercent', e.target.value)} className={`mt-1 ${inputClasses}`} placeholder="37" />
+                                </div>
+                            </div>
+                        </div>
+                     ))}
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                    <span className="text-content-200">Samlet AM-bidrag</span>
-                    <span className="font-semibold text-red-500">- kr. {totalAmBidrag.toFixed(2)}</span>
+            </CollapsibleSubSection>
+
+            <CollapsibleSubSection title="Beregning">
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-content-200">Bruttoindkomst (valgt periode)</span>
+                        <span className="font-semibold text-content-100">kr. {totalGross.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-content-200">Samlet AM-bidrag</span>
+                        <span className="font-semibold text-red-500">- kr. {totalAmBidrag.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-content-200">Samlet A-skat</span>
+                        <span className="font-semibold text-red-500">- kr. {totalATax.toFixed(2)}</span>
+                    </div>
+                    <div className="!mt-4 pt-4 border-t border-base-300 flex justify-between items-center">
+                        <span className="text-lg font-bold text-content-100">Netto udbetalt</span>
+                        <span className="text-lg font-bold text-green-500">kr. {totalNet.toFixed(2)}</span>
+                    </div>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                    <span className="text-content-200">Samlet A-skat</span>
-                    <span className="font-semibold text-red-500">- kr. {totalATax.toFixed(2)}</span>
-                </div>
-                <div className="!mt-4 pt-4 border-t border-base-300 flex justify-between items-center">
-                    <span className="text-lg font-bold text-content-100">Netto udbetalt</span>
-                    <span className="text-lg font-bold text-green-500">kr. {totalNet.toFixed(2)}</span>
-                </div>
-            </div>
+            </CollapsibleSubSection>
+            
              <div className="!mt-6 pt-4 border-t border-base-300">
                 <h4 className="font-semibold text-content-100 flex items-center text-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

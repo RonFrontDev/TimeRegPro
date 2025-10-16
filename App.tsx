@@ -14,6 +14,7 @@ import SalaryCalculator from './components/SalaryCalculator';
 import ControlPanel from './components/ControlPanel';
 import { VIDEO_POST_EARNING } from './constants';
 import {addData} from "./firebase";
+import CollapsibleSection from './components/CollapsibleSection';
 
 // THEME CONTEXT
 type Theme = 'light' | 'dark';
@@ -194,39 +195,45 @@ const AppContent: React.FC = () => {
 
                     {/* Right Column - Main Content */}
                     <div className="lg:col-span-3 space-y-8">
-                        <Summary logs={sortedLogs} videoPosts={videoPosts} companyNames={companyNames} />
-                        <EarningsChart logs={sortedLogs} videoPosts={videoPosts} />
+                        <CollapsibleSection title="Oversigt">
+                            <Summary logs={sortedLogs} videoPosts={videoPosts} companyNames={companyNames} />
+                        </CollapsibleSection>
 
-                        {/* Tabs for List/Calendar view */}
-                        <div className="flex bg-base-300 rounded-lg p-1 space-x-1">
-                            <button
-                                className={`w-full py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'list' ? 'bg-brand-primary text-tab-active-text shadow' : 'hover:bg-base-100/50'}`}
-                                onClick={() => setActiveTab('list')}>
-                                Liste Oversigt
-                            </button>
-                            <button
-                                className={`w-full py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'calendar' ? 'bg-brand-primary text-tab-active-text shadow' : 'hover:bg-base-100/50'}`}
-                                onClick={() => setActiveTab('calendar')}>
-                                Kalender Oversigt
-                            </button>
-                        </div>
+                        <CollapsibleSection title="Indtjening Over Tid">
+                             <EarningsChart logs={sortedLogs} videoPosts={videoPosts} />
+                        </CollapsibleSection>
                         
-                        {activeTab === 'list' ? (
-                            <LogList logs={sortedLogs} onDeleteLog={handleDeleteLogWithConfirm} />
-                        ) : (
-                            <CalendarView 
-                                logs={sortedLogs}
-                                videoPosts={videoPosts}
-                                companyRates={companyRates}
-                                onAddLog={handleAddLog}
-                                onDeleteLog={handleDeleteLog}
-                                onSaveVideoPost={handleSaveVideoPost}
-                                onDeleteVideoPost={handleDeleteVideoPost}
-                                currentDate={currentDate}
-                                onCurrentDateChange={setCurrentDate}
-                                companyNames={companyNames}
-                             />
-                        )}
+                        <CollapsibleSection title="Detaljeret Oversigt">
+                            <div className="flex bg-base-300 rounded-lg p-1 space-x-1 mb-6">
+                                <button
+                                    className={`w-full py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'list' ? 'bg-brand-primary text-tab-active-text shadow' : 'hover:bg-base-100/50'}`}
+                                    onClick={() => setActiveTab('list')}>
+                                    Liste Oversigt
+                                </button>
+                                <button
+                                    className={`w-full py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'calendar' ? 'bg-brand-primary text-tab-active-text shadow' : 'hover:bg-base-100/50'}`}
+                                    onClick={() => setActiveTab('calendar')}>
+                                    Kalender Oversigt
+                                </button>
+                            </div>
+                            
+                            {activeTab === 'list' ? (
+                                <LogList logs={sortedLogs} onDeleteLog={handleDeleteLogWithConfirm} />
+                            ) : (
+                                <CalendarView 
+                                    logs={sortedLogs}
+                                    videoPosts={videoPosts}
+                                    companyRates={companyRates}
+                                    onAddLog={handleAddLog}
+                                    onDeleteLog={handleDeleteLog}
+                                    onSaveVideoPost={handleSaveVideoPost}
+                                    onDeleteVideoPost={handleDeleteVideoPost}
+                                    currentDate={currentDate}
+                                    onCurrentDateChange={setCurrentDate}
+                                    companyNames={companyNames}
+                                 />
+                            )}
+                        </CollapsibleSection>
                     </div>
                 </div>
             </main>

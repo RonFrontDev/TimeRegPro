@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { type WorkLog, type VideoPost, type CompanyRates, Company } from '../types';
 import { getCompanyColor, VIDEO_POST_EARNING } from '../constants';
@@ -375,7 +376,7 @@ const CalendarView: React.FC<CalendarViewProps> = (props) => {
     const selectedDayVideoPost = selectedDate ? videoPostsByDate.get(toLocalDateString(selectedDate)) || null : null;
 
     return (
-        <div className="bg-base-200 p-6 rounded-xl shadow-lg">
+        <div>
             <div className="flex justify-between items-center mb-4">
                 <button onClick={() => navigateDate(-1)} className="p-2 rounded-full hover:bg-base-300 transition-colors">‹</button>
                 <h3 className="text-xl font-bold text-content-100 text-center">
